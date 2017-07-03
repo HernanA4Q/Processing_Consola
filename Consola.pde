@@ -1,4 +1,4 @@
-/* Consola v1.00 / 2016
+/* Consola v1.01 / 2017
  * Hernan GM - hernangonzalezmoreno@gmail.com
 */
 
@@ -155,10 +155,20 @@ public final class Consola{
         text( a.getAlerta(), width, posY );
         posY += tamanoAlerta * LEADIN;
         
+        if( posY > height && i - 1 >= 0 ){
+          removerAlertasFueraDePantalla( i - 1 );
+          return;
+        }
+        
       }
       
     }//end for
     
+  }
+  
+  private void removerAlertasFueraDePantalla( int desde ){
+    for( int i = desde; i >= 0; i-- )
+      alertas.remove( i );
   }
   
   //clase interna y miembro
