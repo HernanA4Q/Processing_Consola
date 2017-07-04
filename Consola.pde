@@ -1,4 +1,4 @@
-/* Consola v1.01 / 2017
+/* Consola v1.02 / 2017
  * Hernan GM - hernangonzalezmoreno@gmail.com
 */
 
@@ -66,6 +66,11 @@ public final class Consola{
   
   public void printlnAlerta( String alerta ){
     alertas.add( new Alerta( alerta ) );
+    System.out.println( alerta );
+  }
+  
+  public void printlnAlerta( String alerta, color colorPersonalizado ){
+    alertas.add( new Alerta( alerta, colorPersonalizado ) );
     System.out.println( alerta );
   }
   
@@ -146,11 +151,12 @@ public final class Consola{
         rect( width - textWidth( a.getAlerta() ) - 5, posY- tamanoAlerta * ( LEADIN * 0.875 ), textWidth( a.getAlerta() ) + 5, tamanoAlerta * LEADIN );
         
         //------
-                          
+        
+        color auxColorAlerta = a.isPersonalizado() ? a.getColorPersonalizado() : colorAlerta ;
         if( a.getEstado() == Alerta.ESTADO_MOSTRAR )
-          fill( colorAlerta );
+          fill( auxColorAlerta );
         else
-          fill( colorAlerta, map( a.getTiempo(), 0, Alerta.TIEMPO_DESAPARECER, 255, 0 ) );
+          fill( auxColorAlerta, map( a.getTiempo(), 0, Alerta.TIEMPO_DESAPARECER, 255, 0 ) );
         
         text( a.getAlerta(), width, posY );
         posY += tamanoAlerta * LEADIN;
@@ -175,6 +181,8 @@ public final class Consola{
   private class Alerta{
     
     private String alerta;
+    private color colorPersonalizado;
+    private boolean personalizado;
     
     private int estado;
     public static final int
@@ -187,8 +195,18 @@ public final class Consola{
     TIEMPO_MOSTRAR = 5000,//3000
     TIEMPO_DESAPARECER = 2000;
     
+    
+    //------------------------------ CONSTRUCTORES
+    
     public Alerta( String alerta ){
       this.alerta = alerta;
+      estado = ESTADO_MOSTRAR;
+    }
+    
+    public Alerta( String alerta, color colorPersonalizado ){
+      this.alerta = alerta;
+      this.colorPersonalizado = colorPersonalizado;
+      personalizado = true;
       estado = ESTADO_MOSTRAR;
     }
     
@@ -204,6 +222,14 @@ public final class Consola{
     
     public int getTiempo(){
       return tiempo;
+    }
+    
+    public boolean isPersonalizado(){
+      return personalizado;
+    }
+    
+    public color getColorPersonalizado(){
+      return colorPersonalizado;
     }
     
     public void ejecutar(){

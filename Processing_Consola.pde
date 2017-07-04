@@ -22,7 +22,7 @@ void mousePressed(){
 }
 
 void mouseReleased(){
-  consola.printlnAlerta( "Mouse Liberado!" );
+  consola.printlnAlerta( "Mouse Liberado!", color( #CC9900 ) );
 }
 
 void keyPressed(){
