@@ -1,5 +1,6 @@
-/* Consola v1.02 / 2017
- * Hernan GM - hernangonzalezmoreno@gmail.com
+/* Consola v1.22 14/08/2017
+ * Nuevo: Nuevo color alerta, nuevo metodo printlnError() color rojo;
+ * Hernán GM - hernangonzalezmoreno@gmail.com
 */
 
 public final class Consola{
@@ -17,7 +18,7 @@ public final class Consola{
   public Consola(){
     texto = "";
     colorTexto = color( #000000 );//color( 255 );
-    colorAlerta = color( #FF0000 );
+    colorAlerta = color( #CC9900 );
     tamanoTexto = int( height * 0.023 ); //int( height * 0.023 ); //tamanoTexto = 20;
     tamanoAlerta = int( height * 0.023 ); //int( height * 0.023 ); //tamanoAlerta = 20;
     
@@ -72,6 +73,11 @@ public final class Consola{
   public void printlnAlerta( String alerta, color colorPersonalizado ){
     alertas.add( new Alerta( alerta, colorPersonalizado ) );
     System.out.println( alerta );
+  }
+  
+  public void printlnError( String alerta ){
+    alertas.add( new Alerta( alerta, color( #FF0000 ) ) );
+    System.err.println( alerta );
   }
   
   public void ejecutar(){
@@ -178,7 +184,7 @@ public final class Consola{
   }
   
   //clase interna y miembro
-  private class Alerta{
+  public class Alerta{
     
     private String alerta;
     private color colorPersonalizado;
