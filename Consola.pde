@@ -100,6 +100,7 @@ public final class Consola{
       textLeading( tamanoTexto * LEADIN ); 
       
       noStroke();
+      rectMode( CORNER );
       
       //NUEVO rectangulo negro de fondo
 
