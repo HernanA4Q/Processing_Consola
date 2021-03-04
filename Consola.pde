@@ -1,7 +1,14 @@
-/* Consola v1.22 14/08/2017
- * Nuevo: Nuevo color alerta, nuevo metodo printlnError() color rojo;
- * Hernán GM - hernangonzalezmoreno@gmail.com
+/* Consola.pde v2.0
+ * Hernan Gonzalez Moreno | hernangonzalezmoreno@gmail.com
+ * 
+ * Esta consola ayuda a imprimir valores en pantalla.
+ * Ademas contiene una terminal para introducir comandos.
 */
+
+interface Comando{
+  boolean entradaDeComandos( String[] comandos, String[] valores );
+  String[] getComandos();
+}
 
 public final class Consola{
   
@@ -15,7 +22,20 @@ public final class Consola{
   
   private static final float LEADIN = 1.5; //--- NUEVO!
   
+  private Terminal terminal;
+  private ManagerComandos managerComandos;
+  
   public Consola(){
+    iniciar( "" );
+  }
+  
+  public Consola( String render ){
+    iniciar( render );
+  }
+  
+  //--------------------------------------- METODOS PUBLICOS
+  
+  void iniciar( String render ){
     texto = "";
     colorTexto = color( #000000 );//color( 255 );
     colorAlerta = color( #CC9900 );
@@ -23,9 +43,10 @@ public final class Consola{
     tamanoAlerta = int( height * 0.023 ); //int( height * 0.023 ); //tamanoAlerta = 20;
     
     debug = verFps = verDatos = verAlertas = true;
+    
+    terminal = new Terminal( render );
+    managerComandos = new ManagerComandos();
   }
-  
-  //--------------------------------------- METODOS PUBLICOS
   
   //GETERS AND SETERS
   public void setDebug( boolean debug ){
@@ -59,6 +80,10 @@ public final class Consola{
   public boolean getVerAlertas(){
     return verAlertas;
   }
+  
+  public void addComando( String nombre, Comando comando ){
+    managerComandos.add( nombre, comando );
+  }
   //--------
   
   public void println( String texto ){
@@ -88,6 +113,16 @@ public final class Consola{
     if( debug ) ejecutarDebug();
     else ejecutarNoDebug();
     texto = "";
+    
+    terminal.ejecutar();
+  }
+  
+  public boolean keyPressed(){
+    return terminal.keyPressed();
+  }
+  
+  public void keyReleased(){
+    terminal.keyReleased();
   }
   
   //--------------------------------------- METODOS PRIVADOS
@@ -184,7 +219,8 @@ public final class Consola{
       alertas.remove( i );
   }
   
-  //clase interna y miembro
+  //-------------- Alerta: clase interna y miembro
+  
   public class Alerta{
     
     private String alerta;
@@ -250,5 +286,108 @@ public final class Consola{
     }
     
   }
+  //----------------- END Alerta
+  
+  //--------------- Terminal: clase interna y miembro
+  
+  class Terminal{
+    
+    boolean activado, borrar;
+    String entrada;
+    
+    int tiempoPuntero;
+    static final int TIEMPO_PUNTERO = 1000;
+    static final int ALTURA = 28;
+    
+    /******** NOTA
+    La Terminal se abre con la tecla F1,
+    el keyCode de esta tecla cambia segun el render.
+    Si el render es comun, el keyCode es 112.
+    Si el render es P2D o P3D el keyCode es 97.
+    *********/
+    
+    final byte teclaAbrirTerminal;
+    
+    Terminal( String render ){
+      if( render.equals( P2D ) || render.equals( P3D ) ) teclaAbrirTerminal = 97;
+      else teclaAbrirTerminal = 112;
+    }
+    
+    void ejecutar(){
+      if( !activado ) return;
+      borrar();
+      pushStyle();
+      fill( #444444 );
+      rectMode( CORNER );
+      rect( 0, height-ALTURA, width, ALTURA );
+      fill( #BBBBBB );
+      textSize(20);
+      text( entrada + puntero(), 5, height - 6 );
+      popStyle();
+    }
+    
+    String puntero(){
+      tiempoPuntero += reloj.getDeltaMillis();
+      tiempoPuntero %= TIEMPO_PUNTERO;
+      if( tiempoPuntero < TIEMPO_PUNTERO*.5 ) return ""; else return "|";
+    }
+    
+    void borrar(){
+      if( borrar && entrada.length() > 0 && frameCount % 5 == 0 ) entrada = entrada.substring(0,entrada.length()-1);
+    }
+    
+    boolean keyPressed(){
+      if( keyCode == SHIFT || keyCode == ALT || keyCode == TAB ) return false;
+      if( !activado && keyCode == teclaAbrirTerminal ){ entrada = ""; activado = true; return true; }
+      if( activado ){ 
+        if( keyCode == ENTER ){ enviar(); activado = false; }
+        else if( keyCode == 8 ) borrar = true;
+        else if( keyCode != 8 ) entrada += key;
+        return true;
+      }
+      return false;
+    }
+    
+    void keyReleased(){
+      if( keyCode == 8 ) borrar = false;
+    }
+    
+    void enviar(){
+      managerComandos.ejecutar( entrada );
+    }
+  }
+  //----------------- END Terminal
+  
+  //--------------- ManagerComandos: clase interna y miembro
+  
+  class ManagerComandos{
+    
+    HashMap<String,Comando> comandos = new HashMap<String,Comando>();
+    
+    void add( String nombre, Comando objeto ){
+      if( comandos.get( nombre ) == null )
+        comandos.put( nombre, objeto );
+      else consola.printlnError( "Error add comando: el nombre ya esta en uso" );
+    }
+    
+    void ejecutar( String cadena ){
+      //String[] recorte = split( cadena, ":" );
+      
+      //La sintaxys esta compuesta de dos partes separadas por un = (igual). El comando puede no contener ningun igual y estar formado por una unica parte. 
+      String[] partes = trim( split( cadena, "=" ) );//Si tiene mas de un = (igual) se ignoraran las partes excedentes
+      String[] comandos = trim( split( partes[0], "." ) );//obtengo los comandos
+      String[] valores = partes.length > 1? trim( split( partes[1], "," ) ) : null;//obtengo los valores
+      
+      if( comandos.length < 2 ){ consola.printlnAlerta( "Error en comando: falta . (punto)", color( #F22020 ) );  return; }// que al menos tenga un punto  
+      //if( recorte[0].equals( "" ) ){ consola.printlnAlerta( "Comando invalido: no debe empezar con . (punto)", color( 255,0,0 ) );  return; }//que no empieze con .
+      Comando c;
+      if( (c = this.comandos.get( comandos[ 0 ] )) == null ){ consola.printlnAlerta( "Comando no encontrado " + partes[ 0 ] );  return; }
+      consola.printlnAlerta( "ok", color( 0, 255, 0 ) );
+      c.entradaDeComandos( comandos, valores );
+      
+    }
+    
+  }
+  //----------------- END ManagerComandos
   
 }
